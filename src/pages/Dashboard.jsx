@@ -12,12 +12,12 @@ function Dashboard() {
     });
   };
 
-  const handleDelete = (todo) => {
+  const handleDelete = async (todo) => {
     const confirmed = window.confirm(`Delete "${todo.title}"?`);
 
     if (!confirmed) return;
 
-    const result = deleteTodo(todo.id);
+    const result = await deleteTodo(todo);
     alert(result.message);
   };
 

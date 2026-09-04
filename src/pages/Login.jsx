@@ -1,10 +1,12 @@
-import { Eye } from "lucide-react";
+import { Eye, EyeClosed } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import usePassword from "../hooks/usePassword";
 
 function Login() {
   const { login } = useAuth();
+  const { showPassword, togglePassword } = usePassword();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -14,11 +16,11 @@ function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = form;
 
-    const result = login(email, password);
+    const result = await login(email, password);
 
     alert(result.message);
 
@@ -55,7 +57,7 @@ function Login() {
               <p className="text-gray-500 mt-2">Tasks are awaiting you</p>
             </div>
 
-            <form className="flex flex-col gap-5">
+            <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="email"
@@ -70,6 +72,7 @@ function Login() {
                   type="email"
                   value={form.email}
                   onChange={handleChange}
+                  required
                   placeholder="Enter your email"
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -87,22 +90,25 @@ function Login() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={form.password}
                     onChange={handleChange}
+                    required
                     placeholder="Enter your password"
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <Eye
-                    size={20}
+                  <button
+                    type="button"
+                    onClick={togglePassword}
                     className="absolute top-1/2 right-4 -translate-y-1/2"
-                  />
+                  >
+                    {showPassword ? <EyeClosed /> : <Eye />}
+                  </button>
                 </div>
               </div>
 
               <button
                 type="submit"
-                onClick={handleSubmit}
                 className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition"
               >
                 Login

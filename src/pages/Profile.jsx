@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
 
 function Profile() {
@@ -7,8 +7,16 @@ function Profile() {
   const [form, setForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    password: user?.password || "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     setForm({
@@ -17,10 +25,10 @@ function Profile() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = updateProfile(form);
+    const result = await updateProfile(form);
 
     alert(result.message);
   };
@@ -45,6 +53,7 @@ function Profile() {
               name="name"
               type="text"
               value={form.name}
+              required
               onChange={handleChange}
               placeholder="Enter your full name"
               className="w-full bg-white rounded-lg px-4 py-3
@@ -61,27 +70,9 @@ function Profile() {
               name="email"
               type="email"
               value={form.email}
+              required
               onChange={handleChange}
               placeholder="Enter your email"
-              className="w-full bg-white rounded-lg px-4 py-3
-                         text-black outline-none"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-semibold text-white"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="text"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
               className="w-full bg-white rounded-lg px-4 py-3
                          text-black outline-none"
             />

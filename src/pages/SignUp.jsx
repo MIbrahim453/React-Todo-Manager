@@ -17,11 +17,11 @@ function Signup() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { name, email, password } = form;
 
-    const result = signUp(name, email, password);
+    const result = await signUp(name, email, password);
 
     alert(result.message);
 
@@ -61,7 +61,7 @@ function Signup() {
               </p>
             </div>
 
-            <form className="flex flex-col gap-5">
+            <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="name"
@@ -76,6 +76,7 @@ function Signup() {
                   type="text"
                   value={form.name}
                   onChange={handleChange}
+                  required
                   placeholder="Enter your full name"
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -95,6 +96,7 @@ function Signup() {
                   type="email"
                   value={form.email}
                   onChange={handleChange}
+                  required
                   placeholder="Enter your email"
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -115,6 +117,8 @@ function Signup() {
                     type={showPassword ? "text" : "password"}
                     value={form.password}
                     onChange={handleChange}
+                    required
+                    minLength={6}
                     placeholder="Enter your password"
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -130,7 +134,6 @@ function Signup() {
 
               <button
                 type="submit"
-                onClick={handleSubmit}
                 className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition"
               >
                 Create Account

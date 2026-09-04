@@ -23,12 +23,12 @@ function TodoForm() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const result = editingTodo
-      ? updateTodo(editingTodo.id, form)
-      : addTodo(form.title, form.description, form.location);
+      ?  await updateTodo(editingTodo.id, form)
+      : await addTodo(form.title, form.description, form.location);
 
     alert(result.message);
 

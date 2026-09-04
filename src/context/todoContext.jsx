@@ -1,5 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./authContext";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+import { fireStore } from "../config/firebase";
 
 const TodoContext = createContext();
 
@@ -10,19 +21,33 @@ export const TodoProvider = ({ children }) => {
 
   const [todos, setTodos] = useState([]);
 
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("todos")) || [];
+  const getTodos = async (user) => {
+    if (!user) {
+      setTodos([]);
+      return;
+    }
+    const q = query(
+      collection(fireStore, "todos"),
+      where("userId", "==", user.uid),
+    );
 
-    if (user) {
-      const userTodos = data.filter((todo) => todo.userId === user.id);
-
-      setTodos(userTodos);
-    } else {
+    try {
+      const querySnapshot = await getDocs(q);
+      const fetchedTodos = querySnapshot.docs.map((todoDoc) => ({
+        ...todoDoc.data(),
+        id: todoDoc.id,
+      }));
+      setTodos(fetchedTodos);
+    } catch (error) {
+      console.error("Error loading todos:", error);
       setTodos([]);
     }
+  };
+  useEffect(() => {
+    getTodos(user);
   }, [user]);
 
-  const addTodo = (title, description, location) => {
+  const addTodo = async (title, description, location) => {
     if (!user) {
       return {
         success: false,
@@ -30,57 +55,75 @@ export const TodoProvider = ({ children }) => {
       };
     }
 
-    const allTodos = JSON.parse(localStorage.getItem("todos")) || [];
-
     const newTodo = {
       id: crypto.randomUUID(),
-      userId: user.id,
+      userId: user.uid,
       title,
       description,
       location,
+      createdAt: new Date().getTime(),
     };
+    try {
+      const docRef = await addDoc(collection(fireStore, "todos"), newTodo);
+      console.log("Document written with ID: ", docRef.id);
 
-    allTodos.push(newTodo);
-
-    localStorage.setItem("todos", JSON.stringify(allTodos));
-
-    setTodos((prev) => [...prev, newTodo]);
-
-    return { 
-      success: true, 
-      message: "Todo created successfully" 
-    };
+      return {
+        success: true,
+        message: "Todo created successfully",
+      };
+    } catch (error) {
+      console.error("Error occurred while adding document", error);
+      return {
+        success: false,
+        message: "Try Again Todo cannot be created",
+      };
+    }
   };
-  const updateTodo = (id, updatedData) => {
-    const allTodos = JSON.parse(localStorage.getItem("todos")) || [];
+  const updateTodo = async (todoId, updatedData) => {
+    if (!user) {
+      return {
+        success: false,
+        message: "You must be logged in to update a todo",
+      };
+    }
 
-    const updatedTodos = allTodos.map((todo) =>
-      todo.id === id ? { ...todo, ...updatedData } : todo,
-    );
+    try {
+      await updateDoc(doc(fireStore, "todos", todoId), updatedData);
 
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === todoId ? { ...todo, ...updatedData } : todo,
+        ),
+      );
 
-    setTodos(updatedTodos.filter((todo) => todo.userId === user.id));
-
-    return { 
-      success: true, 
-      message: "Todo updated successfully" 
-    };
+      return {
+        success: true,
+        message: "Todo updated successfully",
+      };
+    } catch (error) {
+      console.error("Error occurred while updating todo", error);
+      return {
+        success: false,
+        message: "Try again, todo cannot be updated",
+      };
+    }
   };
 
-  const deleteTodo = (id) => {
-    const allTodos = JSON.parse(localStorage.getItem("todos")) || [];
-
-    const updatedTodos = allTodos.filter((todo) => todo.id !== id);
-
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-
-    setTodos(updatedTodos.filter((todo) => todo.userId === user.id));
-
-    return { 
-      success: true, 
-      message: "Todo deleted successfully" 
-    };
+  const deleteTodo = async (todo) => {
+    try {
+      await deleteDoc(doc(fireStore, "todos", todo.id));
+      setTodos((prevTodos) => prevTodos.filter((item) => item.id !== todo.id));
+      return {
+        success: true,
+        message: "Todo deleted successfully",
+      };
+    } catch (error) {
+      console.error("Error removing document:", error);
+      return {
+        success: false,
+        message: "Error occurred while deleting todo",
+      };
+    }
   };
   return (
     <TodoContext.Provider
